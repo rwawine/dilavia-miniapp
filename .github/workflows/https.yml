@@ -10,7 +10,7 @@ on:
       domain:
         description: 'Домен мини-аппа'
         required: true
-        default: 'app.dilavia.by'
+        default: 'dilavia.xyz'
       email:
         description: 'Email для уведомлений Let''s Encrypt (об окончании сертификата)'
         required: true

@@ -1,5 +1,5 @@
 import type { Member, Transaction } from '../types';
-import { formatDate, formatPoints } from '../lib/format';
+import { formatDate, formatMoney, formatPoints } from '../lib/format';
 
 function icon(t: Transaction): string {
   if (t.status === 'pending') return '⏳';
@@ -14,6 +14,8 @@ function icon(t: Transaction): string {
       return '⌛';
     case 'referral':
       return '👥';
+    case 'purchase':
+      return '🧾';
     default:
       return '✏️';
   }
@@ -49,10 +51,18 @@ export default function History({ member }: { member: Member }) {
                 </span>
                 <span className="row__date">{formatDate(t.date)}</span>
               </span>
-              <span className={`row__points ${t.points < 0 ? 'row__points--minus' : ''}`}>
-                {t.points > 0 ? '+' : '−'}
-                {formatPoints(Math.abs(t.points))}
-              </span>
+              {t.points === 0 && t.amount != null ? (
+                // Покупка без баллов (корректировка суммы покупок) — показываем сумму.
+                <span className="row__points row__points--muted">
+                  {t.amount > 0 ? '+' : '−'}
+                  {formatMoney(Math.abs(t.amount))}
+                </span>
+              ) : (
+                <span className={`row__points ${t.points < 0 ? 'row__points--minus' : ''}`}>
+                  {t.points > 0 ? '+' : '−'}
+                  {formatPoints(Math.abs(t.points))}
+                </span>
+              )}
             </li>
           ))}
         </ul>

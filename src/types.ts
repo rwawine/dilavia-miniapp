@@ -31,7 +31,7 @@ export interface Program {
   referralBonus: number;
 }
 
-export type TransactionType = 'earn' | 'spend' | 'bonus' | 'adjust' | 'expire' | 'referral';
+export type TransactionType = 'earn' | 'spend' | 'bonus' | 'adjust' | 'expire' | 'referral' | 'purchase';
 export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Transaction {
@@ -39,6 +39,8 @@ export interface Transaction {
   type: TransactionType;
   status: TransactionStatus;
   points: number;
+  /** Сумма покупки вне сайта (BYN), если операция — покупка. */
+  amount?: number | null;
   title: string;
   date: string;
 }

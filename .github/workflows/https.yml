@@ -1,0 +1,79 @@
+name: Enable HTTPS
+
+# Разовый запуск вручную: Actions → Enable HTTPS → Run workflow.
+# Выпускает бесплатный сертификат Let's Encrypt для домена мини-аппа и
+# включает редирект http → https. Продление сертификата certbot делает сам.
+# Перед запуском у домена должна быть A-запись на IP сервера.
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Домен мини-аппа'
+        required: true
+        default: 'app.dilavia.by'
+      email:
+        description: 'Email для уведомлений Let''s Encrypt (об окончании сертификата)'
+        required: true
+      agree_tos:
+        description: 'Я принимаю условия Let''s Encrypt: https://letsencrypt.org/repository/'
+        type: boolean
+        required: true
+        default: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  https:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ vars.SSH_HOST || '195.208.21.130' }}
+      SSH_USER: ${{ vars.SSH_USER || 'root' }}
+      DOMAIN: ${{ inputs.domain }}
+      EMAIL: ${{ inputs.email }}
+    steps:
+      - name: Check inputs
+        run: |
+          if [ "${{ inputs.agree_tos }}" != "true" ]; then
+            echo "::error::Отметьте согласие с условиями Let's Encrypt."; exit 1
+          fi
+          [[ "$DOMAIN" =~ ^[a-z0-9.-]+\.[a-z]{2,}$ ]] || { echo "::error::Неверный домен: $DOMAIN"; exit 1; }
+          [[ "$EMAIL" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || { echo "::error::Неверный email"; exit 1; }
+
+      - name: Check DNS points to the server
+        run: |
+          ip=$(getent ahostsv4 "$DOMAIN" | awk 'NR==1{print $1}')
+          echo "$DOMAIN -> ${ip:-нет записи} (нужно $SSH_HOST)"
+          if [ "$ip" != "$SSH_HOST" ]; then
+            echo "::error::Домен $DOMAIN пока не указывает на $SSH_HOST. Добавьте A-запись и подождите 10–30 минут."; exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Issue certificate
+        run: |
+          ssh "$SSH_USER@$SSH_HOST" DOMAIN="$DOMAIN" EMAIL="$EMAIL" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          apt-get install -y certbot python3-certbot-nginx
+          conf=/etc/nginx/sites-available/dilavia-miniapp
+          # certbot находит нужный server-блок по server_name.
+          sed -i "s/server_name _;/server_name $DOMAIN;/" "$conf"
+          nginx -t && systemctl reload nginx
+          certbot --nginx -d "$DOMAIN" -m "$EMAIL" --agree-tos --non-interactive --redirect --keep-until-expiring
+          systemctl reload nginx
+          REMOTE
+
+      - name: Check HTTPS
+        run: |
+          sleep 3
+          curl -fsS -o /dev/null -w "https://$DOMAIN -> %{http_code}\n" "https://$DOMAIN/"

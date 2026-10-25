@@ -34,7 +34,7 @@ export default function Levels({ program, totalSpent }: { program: Program; tota
       <section className="rules">
         <h2 className="rules__title">Как это работает</h2>
         <ol className="rules__list">
-          <li>Оформляйте заказы на сайте с тем же номером телефона, что в Telegram.</li>
+          <li>Оформляйте заказы на сайте или в офлайн-магазине с тем же номером телефона, что в Telegram.</li>
           <li>Когда заказ выполнен, баллы начисляются автоматически — процент зависит от уровня.</li>
           <li>1 балл = 1 BYN. Обменивайте баллы на промокод и применяйте его на сайте.</li>
           <li>Уровень растёт от суммы всех выполненных заказов.</li>

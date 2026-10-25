@@ -1,0 +1,19 @@
+/* Telegram passes theme colors as --tg-theme-* CSS variables. */
+:root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--tg-theme-text-color, #000);
+  background: var(--tg-theme-bg-color, #fff);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--tg-theme-bg-color, #fff);
+}
+
+.app {
+  padding: 16px;
+}

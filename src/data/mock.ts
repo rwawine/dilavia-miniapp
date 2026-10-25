@@ -14,6 +14,8 @@ export const MOCK_MEMBER: Member = {
   referral: {
     link: 'https://t.me/dilavia_club_bot?startapp=ref_48213907',
     bonus: 100,
+    invitedBy: null,
+    canSetReferrer: true,
     friends: [
       { firstName: 'Алексей', joinedAt: '2026-10-12', status: 'completed', points: 100 },
       { firstName: 'Марина', joinedAt: '2026-10-20', status: 'pending', points: 100 },

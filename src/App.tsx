@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { IssuedPromocode, Member, Program, Reward } from './types';
 import { MOCK_MEMBER, MOCK_PROMOS } from './data/mock';
 import { DEFAULT_PROGRAM } from './data/program';
-import { fetchMe, redeem as redeemApi, register } from './api';
+import { fetchMe, redeem as redeemApi, register, setReferrer as setReferrerApi } from './api';
 import { haptic, insideTelegram, showBackButton, tg } from './telegram';
 import Home from './screens/Home';
 import History from './screens/History';
@@ -98,8 +98,19 @@ export default function App() {
     setScreen(next);
   }
 
-  async function join(signedContact: string) {
-    const me = await register(signedContact);
+  async function join(signedContact: string, referrerCard?: string) {
+    const me = await register(signedContact, referrerCard);
+    if (me.registered) setState({ kind: 'ready', member: me.member, program: me.program });
+  }
+
+  async function setReferrer(card: string) {
+    if (state.kind !== 'ready') return;
+    if (DEMO) {
+      const referral = { ...state.member.referral, invitedBy: 'Демо-друг', canSetReferrer: false };
+      setState({ ...state, member: { ...state.member, referral } });
+      return;
+    }
+    const me = await setReferrerApi(card);
     if (me.registered) setState({ kind: 'ready', member: me.member, program: me.program });
   }
 
@@ -152,7 +163,7 @@ export default function App() {
         {screen === 'redeem' && <Redeem member={member} program={program} onRedeem={redeem} />}
         {screen === 'promos' && <Promos promos={DEMO ? MOCK_PROMOS : []} />}
         {screen === 'levels' && <Levels program={program} totalSpent={member.totalSpent} />}
-        {screen === 'invite' && <Invite member={member} />}
+        {screen === 'invite' && <Invite member={member} onSetReferrer={setReferrer} />}
       </main>
 
       <nav className="tabbar">

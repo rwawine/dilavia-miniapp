@@ -7,12 +7,14 @@ interface Props {
   program: Program;
   /** Имя пригласившего, если приложение открыли по ссылке друга. */
   invitedBy?: string | null;
-  onContact: (signedContact: string) => Promise<void>;
+  onContact: (signedContact: string, referrerCard?: string) => Promise<void>;
 }
 
 export default function Onboarding({ program, invitedBy, onContact }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [card, setCard] = useState('');
+  const cardDigits = card.replace(/\D/g, '');
   const base = [...program.levels].sort((a, b) => a.minSpent - b.minSpent)[0];
   const best = [...program.levels].sort((a, b) => b.cashbackPercent - a.cashbackPercent)[0];
 
@@ -28,7 +30,7 @@ export default function Onboarding({ program, invitedBy, onContact }: Props) {
     }
     setBusy(true);
     try {
-      await onContact(contact.signed);
+      await onContact(contact.signed, cardDigits.length === 8 ? cardDigits : undefined);
       haptic('success');
     } catch (err) {
       haptic('error');
@@ -69,6 +71,23 @@ export default function Onboarding({ program, invitedBy, onContact }: Props) {
       <p className="note">
         Мы найдём ваши заказы по номеру телефона. Номер подтверждает сам Telegram — вводить ничего не нужно.
       </p>
+
+      {!invitedBy && program.referralBonus > 0 && (
+        <label className="field">
+          <span className="field__label">Номер карты друга, если вас пригласили (необязательно)</span>
+          <input
+            className="input"
+            inputMode="numeric"
+            placeholder="4821 3907"
+            maxLength={9}
+            value={card}
+            onChange={(e) => {
+              const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+              setCard(d.length > 4 ? `${d.slice(0, 4)} ${d.slice(4)}` : d);
+            }}
+          />
+        </label>
+      )}
 
       {error && <p className="notice notice--error">{error}</p>}
 

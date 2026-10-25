@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { InvitedFriend, Member } from '../types';
 import { formatDate, formatPoints } from '../lib/format';
 import { haptic, shareLink } from '../telegram';
+import ReferrerForm from '../components/ReferrerForm';
 
 const STATUS: Record<InvitedFriend['status'], { label: string; className: string }> = {
   waiting: { label: 'Ждём первый заказ', className: '' },
@@ -9,9 +10,14 @@ const STATUS: Record<InvitedFriend['status'], { label: string; className: string
   completed: { label: 'Бонус начислен', className: 'friend__status--done' },
 };
 
-export default function Invite({ member }: { member: Member }) {
+interface Props {
+  member: Member;
+  onSetReferrer: (card: string) => Promise<void>;
+}
+
+export default function Invite({ member, onSetReferrer }: Props) {
   const [copied, setCopied] = useState(false);
-  const { link, bonus, friends } = member.referral;
+  const { link, bonus, friends, invitedBy, canSetReferrer } = member.referral;
   const earned = friends.filter((f) => f.status === 'completed').reduce((sum, f) => sum + (f.points ?? 0), 0);
 
   async function copy() {
@@ -62,6 +68,12 @@ export default function Invite({ member }: { member: Member }) {
             </button>
           </div>
         </>
+      )}
+
+      {invitedBy ? (
+        <p className="notice">👋 Вас пригласил(а) {invitedBy}</p>
+      ) : (
+        canSetReferrer && <ReferrerForm onSubmit={onSetReferrer} />
       )}
 
       <section className="friends">

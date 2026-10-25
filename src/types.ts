@@ -72,6 +72,10 @@ export interface Referral {
   link: string | null;
   bonus: number;
   friends: InvitedFriend[];
+  /** Кто пригласил самого участника. */
+  invitedBy: string | null;
+  /** Можно ли ещё указать пригласившего вручную (30 дней, до первого выполненного заказа). */
+  canSetReferrer: boolean;
 }
 
 export interface Member {

@@ -42,7 +42,11 @@ export type MeResponse =
 
 export const fetchMe = () => request<MeResponse>('GET', '/loyalty/me');
 
-export const register = (contact: string) => request<MeResponse>('POST', '/loyalty/register', { contact });
+export const register = (contact: string, referrerCard?: string) =>
+  request<MeResponse>('POST', '/loyalty/register', { contact, referrerCard: referrerCard || undefined });
+
+/** Указать номер карты пригласившего вручную (если открыли мини-апп не по ссылке). */
+export const setReferrer = (card: string) => request<MeResponse>('POST', '/loyalty/referrer', { card });
 
 export const redeem = (points: number) =>
   request<{ promocode: IssuedPromocode; member: Member }>('POST', '/loyalty/redeem', { points });

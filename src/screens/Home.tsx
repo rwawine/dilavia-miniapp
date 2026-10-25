@@ -56,7 +56,11 @@ export default function Home({ member, program, onNavigate }: Props) {
             <span>🎁 Пригласите друга</span>
             <strong>+{formatPoints(member.referral.bonus)}</strong>
           </div>
-          <span className="tile__hint">За первый заказ каждого друга — на вашу карту →</span>
+          <span className="tile__hint">
+            {member.referral.canSetReferrer
+              ? 'Вас самих пригласил друг? Укажите номер его карты →'
+              : 'За первый заказ каждого друга — на вашу карту →'}
+          </span>
         </button>
       )}
 

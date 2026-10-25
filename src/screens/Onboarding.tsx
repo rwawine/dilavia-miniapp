@@ -5,10 +5,12 @@ import { haptic, requestPhone } from '../telegram';
 
 interface Props {
   program: Program;
+  /** Имя пригласившего, если приложение открыли по ссылке друга. */
+  invitedBy?: string | null;
   onContact: (signedContact: string) => Promise<void>;
 }
 
-export default function Onboarding({ program, onContact }: Props) {
+export default function Onboarding({ program, invitedBy, onContact }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const base = [...program.levels].sort((a, b) => a.minSpent - b.minSpent)[0];
@@ -41,6 +43,8 @@ export default function Onboarding({ program, onContact }: Props) {
       <div className="onboarding__hero">🛋</div>
       <h1 className="title">{program.name}</h1>
       <p className="subtitle">Программа лояльности мебельной фабрики Dilavia</p>
+
+      {invitedBy && <p className="notice notice--accent">👋 Вас пригласил(а) {invitedBy}</p>}
 
       <ul className="benefits">
         {program.welcomeBonus > 0 && (

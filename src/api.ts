@@ -37,7 +37,7 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
 }
 
 export type MeResponse =
-  | { registered: false; program: Program }
+  | { registered: false; program: Program; invitedBy?: string | null }
   | { registered: true; member: Member; program: Program };
 
 export const fetchMe = () => request<MeResponse>('GET', '/loyalty/me');

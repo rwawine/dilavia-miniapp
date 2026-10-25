@@ -672,3 +672,90 @@ button {
   flex: none;
   font-size: 20px;
 }
+
+/* Card number */
+.card__number {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+
+/* Invite */
+.tile--invite {
+  border: 2px solid var(--accent);
+}
+
+.notice--accent {
+  background: rgba(255, 184, 0, 0.16);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffcc33, #e09400);
+  color: #1a1a1a;
+}
+
+.invite__bonus {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.invite__text {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.steps {
+  margin: 0;
+  padding: 16px 16px 16px 36px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.steps li + li {
+  margin-top: 6px;
+}
+
+.friends {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.friends__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.friends__head .rules__title {
+  margin: 0;
+}
+
+.friends__earned {
+  color: var(--success);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.friend__status--pending {
+  color: var(--accent);
+}
+
+.friend__status--done {
+  color: var(--success);
+}
+
+.row__points--muted {
+  color: var(--hint);
+}

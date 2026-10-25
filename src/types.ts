@@ -27,9 +27,11 @@ export interface Program {
   welcomeBonus: number;
   birthdayBonus: number;
   promocodeValidDays: number;
+  /** Баллы за приглашённого друга (0 — программа приглашений выключена). */
+  referralBonus: number;
 }
 
-export type TransactionType = 'earn' | 'spend' | 'bonus' | 'adjust' | 'expire';
+export type TransactionType = 'earn' | 'spend' | 'bonus' | 'adjust' | 'expire' | 'referral';
 export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Transaction {
@@ -57,8 +59,25 @@ export interface IssuedPromocode {
   status: 'active' | 'used' | 'expired';
 }
 
+export interface InvitedFriend {
+  firstName: string;
+  joinedAt: string;
+  /** waiting — ждём первый заказ, pending — заказ в работе, completed — бонус начислен. */
+  status: 'waiting' | 'pending' | 'completed';
+  points: number | null;
+}
+
+export interface Referral {
+  /** Ссылка-приглашение; null — программа приглашений выключена. */
+  link: string | null;
+  bonus: number;
+  friends: InvitedFriend[];
+}
+
 export interface Member {
   firstName: string;
+  /** Номер карты: «4821 3907». */
+  cardNumber: string;
   phone: string;
   balance: number;
   pendingPoints: number;
@@ -68,4 +87,5 @@ export interface Member {
   isBlocked: boolean;
   transactions: Transaction[];
   promocodes: IssuedPromocode[];
+  referral: Referral;
 }

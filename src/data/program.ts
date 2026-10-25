@@ -13,6 +13,7 @@ export const DEFAULT_PROGRAM: Program = {
   welcomeBonus: 20,
   birthdayBonus: 30,
   promocodeValidDays: 30,
+  referralBonus: 100,
   levels: [
     { code: 'base', name: 'Базовый', minSpent: 0, cashbackPercent: 3, perks: ['3% от заказа баллами', '20 баллов за вступление'] },
     { code: 'silver', name: 'Серебро', minSpent: 1500, cashbackPercent: 5, perks: ['5% от заказа баллами', '30 баллов в день рождения'] },

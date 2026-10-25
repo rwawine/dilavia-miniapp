@@ -47,7 +47,18 @@ export default function Home({ member, program, onNavigate }: Props) {
             +{formatPoints(member.pendingPoints)} начислим после выполнения заказа
           </div>
         )}
+        {member.cardNumber && <div className="card__number">№ {member.cardNumber}</div>}
       </section>
+
+      {member.referral.link && (
+        <button className="tile tile--invite" onClick={() => onNavigate('invite')}>
+          <div className="tile__row">
+            <span>🎁 Пригласите друга</span>
+            <strong>+{formatPoints(member.referral.bonus)}</strong>
+          </div>
+          <span className="tile__hint">За первый заказ каждого друга — на вашу карту →</span>
+        </button>
+      )}
 
       <button className="tile" onClick={() => onNavigate('levels')}>
         {next ? (

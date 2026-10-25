@@ -24,13 +24,14 @@ interface HapticFeedback {
 
 export interface TelegramWebApp {
   initData: string;
-  initDataUnsafe: { user?: TelegramUser };
   colorScheme: 'light' | 'dark';
   version: string;
   ready(): void;
   expand(): void;
   isVersionAtLeast(version: string): boolean;
   openLink(url: string): void;
+  openTelegramLink(url: string): void;
+  initDataUnsafe: { user?: TelegramUser; start_param?: string };
   showConfirm(message: string, cb: (ok: boolean) => void): void;
   requestContact(cb: (shared: boolean, result?: { status?: string; response?: string }) => void): void;
   BackButton: BackButton;
@@ -64,6 +65,13 @@ export function confirmAction(message: string): Promise<boolean> {
 export function openLink(url: string) {
   if (insideTelegram) tg!.openLink(url);
   else window.open(url, '_blank', 'noopener');
+}
+
+/** Окно Telegram «Переслать» со ссылкой и текстом — пользователь выбирает, кому отправить. */
+export function shareLink(url: string, text: string) {
+  const share = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  if (insideTelegram) tg!.openTelegramLink(share);
+  else window.open(share, '_blank', 'noopener');
 }
 
 export type ContactResult =

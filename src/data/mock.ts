@@ -3,6 +3,7 @@ import type { Member, Promo } from '../types';
 /** Демо-данные: показываются, когда приложение открыто не в Telegram. */
 export const MOCK_MEMBER: Member = {
   firstName: 'Анна',
+  cardNumber: '4821 3907',
   phone: '+375 29 *** ** 71',
   balance: 137,
   pendingPoints: 74,
@@ -10,8 +11,19 @@ export const MOCK_MEMBER: Member = {
   level: 'silver',
   isBlocked: false,
   promocodes: [],
+  referral: {
+    link: 'https://t.me/dilavia_club_bot?startapp=ref_48213907',
+    bonus: 100,
+    friends: [
+      { firstName: 'Алексей', joinedAt: '2026-10-12', status: 'completed', points: 100 },
+      { firstName: 'Марина', joinedAt: '2026-10-20', status: 'pending', points: 100 },
+      { firstName: 'Ольга', joinedAt: '2026-10-23', status: 'waiting', points: null },
+    ],
+  },
   transactions: [
     { id: 't6', type: 'earn', status: 'pending', points: 74, title: 'Заказ №1087', date: '2026-10-21' },
+    { id: 't7', type: 'referral', status: 'pending', points: 100, title: 'Бонус за друга: Марина (заказ №1090)', date: '2026-10-22' },
+    { id: 't6r', type: 'referral', status: 'completed', points: 100, title: 'Бонус за друга: Алексей (заказ №1061)', date: '2026-10-15' },
     { id: 't5', type: 'earn', status: 'completed', points: 52, title: 'Заказ №1043', date: '2026-09-14' },
     { id: 't4', type: 'spend', status: 'completed', points: -50, title: 'Обмен на промокод 50 BYN', date: '2026-08-30' },
     { id: 't3', type: 'earn', status: 'completed', points: 75, title: 'Заказ №0988', date: '2026-07-02' },

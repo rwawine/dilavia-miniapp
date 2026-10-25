@@ -12,6 +12,8 @@ function icon(t: Transaction): string {
       return '🎁';
     case 'expire':
       return '⌛';
+    case 'referral':
+      return '👥';
     default:
       return '✏️';
   }

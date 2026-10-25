@@ -10,8 +10,9 @@ import Redeem from './screens/Redeem';
 import Levels from './screens/Levels';
 import Promos from './screens/Promos';
 import Onboarding from './screens/Onboarding';
+import Invite from './screens/Invite';
 
-export type Screen = 'home' | 'history' | 'redeem' | 'promos' | 'levels';
+export type Screen = 'home' | 'history' | 'redeem' | 'promos' | 'levels' | 'invite';
 
 const TABS: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Карта', icon: '💳' },
@@ -26,7 +27,7 @@ const DEMO = !insideTelegram;
 type State =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'onboarding'; program: Program }
+  | { kind: 'onboarding'; program: Program; invitedBy: string | null }
   | { kind: 'ready'; member: Member; program: Program };
 
 function demoMember(): Member {
@@ -72,7 +73,7 @@ export default function App() {
     setState({ kind: 'loading' });
     try {
       const me = await fetchMe();
-      setState(me.registered ? { kind: 'ready', member: me.member, program: me.program } : { kind: 'onboarding', program: me.program });
+      setState(me.registered ? { kind: 'ready', member: me.member, program: me.program } : { kind: 'onboarding', program: me.program, invitedBy: me.invitedBy ?? null });
     } catch (err) {
       setState({ kind: 'error', message: (err as Error).message });
     }
@@ -82,9 +83,9 @@ export default function App() {
     load();
   }, [load]);
 
-  // «Уровни» — вложенный экран: в Telegram показываем системную кнопку «Назад».
+  // «Уровни» и «Пригласить друга» — вложенные экраны: в Telegram показываем кнопку «Назад».
   useEffect(() => {
-    if (screen !== 'levels') return;
+    if (screen !== 'levels' && screen !== 'invite') return;
     return showBackButton(() => setScreen('home'));
   }, [screen]);
 
@@ -134,13 +135,13 @@ export default function App() {
   if (state.kind === 'onboarding') {
     return (
       <main className="app__content app__content--bare">
-        <Onboarding program={state.program} onContact={join} />
+        <Onboarding program={state.program} invitedBy={state.invitedBy} onContact={join} />
       </main>
     );
   }
 
   const { member, program } = state;
-  const activeTab = screen === 'levels' ? 'home' : screen;
+  const activeTab = screen === 'levels' || screen === 'invite' ? 'home' : screen;
 
   return (
     <div className="app">
@@ -151,6 +152,7 @@ export default function App() {
         {screen === 'redeem' && <Redeem member={member} program={program} onRedeem={redeem} />}
         {screen === 'promos' && <Promos promos={DEMO ? MOCK_PROMOS : []} />}
         {screen === 'levels' && <Levels program={program} totalSpent={member.totalSpent} />}
+        {screen === 'invite' && <Invite member={member} />}
       </main>
 
       <nav className="tabbar">

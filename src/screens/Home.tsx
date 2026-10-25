@@ -1,7 +1,8 @@
 import type { Member, Program } from '../types';
 import { SITE_URL, getLevel, getNextLevel } from '../data/program';
-import { formatMoney, formatPoints, pointsWord } from '../lib/format';
+import { formatMoney, formatPoints } from '../lib/format';
 import { openLink } from '../telegram';
+import LoyaltyCard, { metalFor } from '../components/LoyaltyCard';
 import type { Screen } from '../App';
 
 interface Props {
@@ -33,22 +34,17 @@ export default function Home({ member, program, onNavigate }: Props) {
       )}
       {!program.isEnabled && <p className="notice">Программа лояльности временно приостановлена.</p>}
 
-      <section className={`card card--${level.code}`}>
-        <div className="card__top">
-          <span className="card__level">{level.name}</span>
-          <span className="card__cashback">{level.cashbackPercent}% баллами</span>
-        </div>
-        <div className="card__balance">
-          <span className="card__balance-value">{member.balance.toLocaleString('ru-RU')}</span>
-          <span className="card__balance-label">{pointsWord(member.balance)} · 1 балл = 1 BYN</span>
-        </div>
-        {member.pendingPoints > 0 && (
-          <div className="card__pending">
-            +{formatPoints(member.pendingPoints)} начислим после выполнения заказа
-          </div>
-        )}
-        {member.cardNumber && <div className="card__number">№ {member.cardNumber}</div>}
-      </section>
+      <LoyaltyCard
+        metal={metalFor(program, level)}
+        levelName={level.name}
+        cashbackPercent={level.cashbackPercent}
+        balance={member.balance}
+        cardNumber={member.cardNumber}
+      />
+      <p className="card-note">
+        1 балл = 1 BYN
+        {member.pendingPoints > 0 && ` · +${formatPoints(member.pendingPoints)} начислим после выполнения заказа`}
+      </p>
 
       {member.referral.link && (
         <button className="tile tile--invite" onClick={() => onNavigate('invite')}>

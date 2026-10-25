@@ -1,8 +1,10 @@
-import { LEVELS, PROGRAM, getLevel } from '../data/program';
+import type { Program } from '../types';
+import { getLevel } from '../data/program';
 import { formatMoney } from '../lib/format';
 
-export default function Levels({ totalSpent }: { totalSpent: number }) {
-  const current = getLevel(totalSpent);
+export default function Levels({ program, totalSpent }: { program: Program; totalSpent: number }) {
+  const current = getLevel(program, totalSpent);
+  const levels = [...program.levels].sort((a, b) => a.minSpent - b.minSpent);
 
   return (
     <div className="screen">
@@ -10,18 +12,18 @@ export default function Levels({ totalSpent }: { totalSpent: number }) {
       <p className="subtitle">Ваши покупки за всё время: {formatMoney(totalSpent)}</p>
 
       <ul className="levels">
-        {LEVELS.map((l) => (
-          <li key={l.id} className={`level level--${l.id} ${l.id === current.id ? 'level--current' : ''}`}>
+        {levels.map((l) => (
+          <li key={l.code} className={`level ${l.code === current.code ? 'level--current' : ''}`}>
             <div className="level__head">
               <span className="level__name">{l.name}</span>
-              {l.id === current.id ? (
+              {l.code === current.code ? (
                 <span className="level__badge">Ваш уровень</span>
               ) : (
                 <span className="level__from">{l.minSpent ? `от ${formatMoney(l.minSpent)}` : 'сразу'}</span>
               )}
             </div>
             <ul className="level__perks">
-              {l.perks.map((p) => (
+              {(l.perks.length ? l.perks : [`${l.cashbackPercent}% от заказа баллами`]).map((p) => (
                 <li key={p}>{p}</li>
               ))}
             </ul>
@@ -35,8 +37,8 @@ export default function Levels({ totalSpent }: { totalSpent: number }) {
           <li>Оформляйте заказы на сайте с тем же номером телефона, что в Telegram.</li>
           <li>Когда заказ выполнен, баллы начисляются автоматически — процент зависит от уровня.</li>
           <li>1 балл = 1 BYN. Обменивайте баллы на промокод и применяйте его на сайте.</li>
-          <li>Уровень растёт от суммы всех выполненных заказов и не сгорает.</li>
-          <li>Баллы действуют {PROGRAM.pointsLifetimeMonths} месяцев с момента начисления.</li>
+          <li>Уровень растёт от суммы всех выполненных заказов.</li>
+          <li>Баллы действуют {program.pointsLifetimeMonths} месяцев с момента начисления.</li>
         </ol>
       </section>
     </div>

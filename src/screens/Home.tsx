@@ -1,17 +1,18 @@
-import type { Member } from '../types';
-import { PROGRAM, getLevel, getNextLevel } from '../data/program';
+import type { Member, Program } from '../types';
+import { SITE_URL, getLevel, getNextLevel } from '../data/program';
 import { formatMoney, formatPoints, pointsWord } from '../lib/format';
 import { openLink } from '../telegram';
 import type { Screen } from '../App';
 
 interface Props {
   member: Member;
+  program: Program;
   onNavigate: (screen: Screen) => void;
 }
 
-export default function Home({ member, onNavigate }: Props) {
-  const level = getLevel(member.totalSpent);
-  const next = getNextLevel(level.id);
+export default function Home({ member, program, onNavigate }: Props) {
+  const level = getLevel(program, member.totalSpent);
+  const next = getNextLevel(program, level.code);
   const progress = next
     ? Math.min(100, ((member.totalSpent - level.minSpent) / (next.minSpent - level.minSpent)) * 100)
     : 100;
@@ -19,11 +20,20 @@ export default function Home({ member, onNavigate }: Props) {
   return (
     <div className="screen">
       <header className="greeting">
-        <span className="greeting__hello">Здравствуйте, {member.firstName}!</span>
-        <span className="greeting__program">{PROGRAM.name}</span>
+        <span className="greeting__hello">
+          {member.firstName ? `Здравствуйте, ${member.firstName}!` : 'Здравствуйте!'}
+        </span>
+        <span className="greeting__program">
+          {program.name} · {member.phone}
+        </span>
       </header>
 
-      <section className={`card card--${level.id}`}>
+      {member.isBlocked && (
+        <p className="notice notice--error">Начисление баллов приостановлено. Обратитесь к менеджеру.</p>
+      )}
+      {!program.isEnabled && <p className="notice">Программа лояльности временно приостановлена.</p>}
+
+      <section className={`card card--${level.code}`}>
         <div className="card__top">
           <span className="card__level">{level.name}</span>
           <span className="card__cashback">{level.cashbackPercent}% баллами</span>
@@ -32,8 +42,10 @@ export default function Home({ member, onNavigate }: Props) {
           <span className="card__balance-value">{member.balance.toLocaleString('ru-RU')}</span>
           <span className="card__balance-label">{pointsWord(member.balance)} · 1 балл = 1 BYN</span>
         </div>
-        {member.pending > 0 && (
-          <div className="card__pending">+{formatPoints(member.pending)} начислим после выполнения заказа</div>
+        {member.pendingPoints > 0 && (
+          <div className="card__pending">
+            +{formatPoints(member.pendingPoints)} начислим после выполнения заказа
+          </div>
         )}
       </section>
 
@@ -42,7 +54,7 @@ export default function Home({ member, onNavigate }: Props) {
           <>
             <div className="tile__row">
               <span>До уровня «{next.name}»</span>
-              <strong>{formatMoney(next.minSpent - member.totalSpent)}</strong>
+              <strong>{formatMoney(Math.ceil(next.minSpent - member.totalSpent))}</strong>
             </div>
             <div className="progress">
               <div className="progress__bar" style={{ width: `${progress}%` }} />
@@ -63,7 +75,7 @@ export default function Home({ member, onNavigate }: Props) {
         <button className="button" onClick={() => onNavigate('redeem')}>
           Потратить баллы
         </button>
-        <button className="button button--secondary" onClick={() => openLink(`${PROGRAM.siteUrl}/catalog`)}>
+        <button className="button button--secondary" onClick={() => openLink(`${SITE_URL}/catalog`)}>
           Перейти в каталог
         </button>
       </div>

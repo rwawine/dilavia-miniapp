@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
-import type { IssuedPromocode, Member, Reward } from './types';
+import { useCallback, useEffect, useState } from 'react';
+import type { IssuedPromocode, Member, Program, Reward } from './types';
 import { MOCK_MEMBER, MOCK_PROMOS } from './data/mock';
-import { haptic, showBackButton, tg } from './telegram';
+import { DEFAULT_PROGRAM } from './data/program';
+import { fetchMe, redeem as redeemApi, register } from './api';
+import { haptic, insideTelegram, showBackButton, tg } from './telegram';
 import Home from './screens/Home';
 import History from './screens/History';
 import Redeem from './screens/Redeem';
 import Levels from './screens/Levels';
 import Promos from './screens/Promos';
+import Onboarding from './screens/Onboarding';
 
 export type Screen = 'home' | 'history' | 'redeem' | 'promos' | 'levels';
 
@@ -17,20 +20,67 @@ const TABS: { id: Screen; label: string; icon: string }[] = [
   { id: 'promos', label: 'Акции', icon: '🔥' },
 ];
 
-const PROMOCODE_DAYS = 30;
+/** Вне Telegram — демо на тестовых данных, чтобы можно было посмотреть экраны в браузере. */
+const DEMO = !insideTelegram;
 
-function generateCode(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const random = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]);
-  return `DLV-${random.join('')}`;
+type State =
+  | { kind: 'loading' }
+  | { kind: 'error'; message: string }
+  | { kind: 'onboarding'; program: Program }
+  | { kind: 'ready'; member: Member; program: Program };
+
+function demoMember(): Member {
+  return { ...MOCK_MEMBER, firstName: tg?.initDataUnsafe.user?.first_name ?? MOCK_MEMBER.firstName };
+}
+
+/** Демо-обмен: списываем баллы локально, промокод не настоящий. */
+function demoRedeem(member: Member, program: Program, reward: Reward): Member {
+  const code = `DEMO-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const promocode: IssuedPromocode = {
+    code,
+    discount: reward.discount,
+    minOrder: reward.minOrder,
+    validUntil: new Date(Date.now() + program.promocodeValidDays * 86_400_000).toISOString(),
+    status: 'active',
+  };
+  return {
+    ...member,
+    balance: member.balance - reward.points,
+    promocodes: [promocode, ...member.promocodes],
+    transactions: [
+      {
+        id: code,
+        type: 'spend',
+        status: 'completed',
+        points: -reward.points,
+        title: `Обмен на промокод ${reward.discount} BYN`,
+        date: new Date().toISOString(),
+      },
+      ...member.transactions,
+    ],
+  };
 }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
-  const [member, setMember] = useState<Member>(() => ({
-    ...MOCK_MEMBER,
-    firstName: tg?.initDataUnsafe.user?.first_name ?? MOCK_MEMBER.firstName,
-  }));
+  const [state, setState] = useState<State>(
+    DEMO ? { kind: 'ready', member: demoMember(), program: DEFAULT_PROGRAM } : { kind: 'loading' },
+  );
+
+  const load = useCallback(async () => {
+    if (DEMO) return;
+    setState({ kind: 'loading' });
+    try {
+      const me = await fetchMe();
+      setState(me.registered ? { kind: 'ready', member: me.member, program: me.program } : { kind: 'onboarding', program: me.program });
+    } catch (err) {
+      setState({ kind: 'error', message: (err as Error).message });
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // «Уровни» — вложенный экран: в Telegram показываем системную кнопку «Назад».
   useEffect(() => {
@@ -47,43 +97,60 @@ export default function App() {
     setScreen(next);
   }
 
-  // Пока без сервера: списываем баллы и выдаём промокод локально.
-  function redeem(reward: Reward): IssuedPromocode {
-    const validUntil = new Date(Date.now() + PROMOCODE_DAYS * 86_400_000).toISOString();
-    const promocode: IssuedPromocode = {
-      code: generateCode(),
-      discount: reward.discount,
-      minOrder: reward.minOrder,
-      validUntil,
-    };
-    setMember((m) => ({
-      ...m,
-      balance: m.balance - reward.points,
-      promocodes: [promocode, ...m.promocodes],
-      transactions: [
-        {
-          id: promocode.code,
-          type: 'spend',
-          points: -reward.points,
-          title: `Обмен на промокод ${reward.discount} BYN`,
-          date: new Date().toISOString(),
-        },
-        ...m.transactions,
-      ],
-    }));
-    return promocode;
+  async function join(signedContact: string) {
+    const me = await register(signedContact);
+    if (me.registered) setState({ kind: 'ready', member: me.member, program: me.program });
   }
 
+  async function redeem(reward: Reward) {
+    if (state.kind !== 'ready') return;
+    if (DEMO) {
+      setState({ ...state, member: demoRedeem(state.member, state.program, reward) });
+      return;
+    }
+    const { member } = await redeemApi(reward.points);
+    setState({ ...state, member });
+  }
+
+  if (state.kind === 'loading') {
+    return (
+      <div className="status">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (state.kind === 'error') {
+    return (
+      <div className="status">
+        <p className="status__text">{state.message}</p>
+        <button className="button" onClick={load}>
+          Повторить
+        </button>
+      </div>
+    );
+  }
+
+  if (state.kind === 'onboarding') {
+    return (
+      <main className="app__content app__content--bare">
+        <Onboarding program={state.program} onContact={join} />
+      </main>
+    );
+  }
+
+  const { member, program } = state;
   const activeTab = screen === 'levels' ? 'home' : screen;
 
   return (
     <div className="app">
+      {DEMO && <div className="demo-banner">Демо-режим: тестовые данные. Откройте приложение в Telegram.</div>}
       <main className="app__content">
-        {screen === 'home' && <Home member={member} onNavigate={navigate} />}
+        {screen === 'home' && <Home member={member} program={program} onNavigate={navigate} />}
         {screen === 'history' && <History member={member} />}
-        {screen === 'redeem' && <Redeem member={member} onRedeem={redeem} />}
-        {screen === 'promos' && <Promos promos={MOCK_PROMOS} />}
-        {screen === 'levels' && <Levels totalSpent={member.totalSpent} />}
+        {screen === 'redeem' && <Redeem member={member} program={program} onRedeem={redeem} />}
+        {screen === 'promos' && <Promos promos={DEMO ? MOCK_PROMOS : []} />}
+        {screen === 'levels' && <Levels program={program} totalSpent={member.totalSpent} />}
       </main>
 
       <nav className="tabbar">

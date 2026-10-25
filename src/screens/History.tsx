@@ -1,13 +1,21 @@
-import type { Member, TransactionType } from '../types';
+import type { Member, Transaction } from '../types';
 import { formatDate, formatPoints } from '../lib/format';
 
-const ICONS: Record<TransactionType, string> = {
-  earn: '🛋',
-  pending: '⏳',
-  spend: '🎟',
-  bonus: '🎁',
-  expire: '⌛',
-};
+function icon(t: Transaction): string {
+  if (t.status === 'pending') return '⏳';
+  switch (t.type) {
+    case 'earn':
+      return '🛋';
+    case 'spend':
+      return '🎟';
+    case 'bonus':
+      return '🎁';
+    case 'expire':
+      return '⌛';
+    default:
+      return '✏️';
+  }
+}
 
 export default function History({ member }: { member: Member }) {
   return (
@@ -20,7 +28,7 @@ export default function History({ member }: { member: Member }) {
           <span className="summary__label">доступно</span>
         </div>
         <div className="summary__item">
-          <span className="summary__value summary__value--muted">{member.pending}</span>
+          <span className="summary__value summary__value--muted">{member.pendingPoints}</span>
           <span className="summary__label">в ожидании</span>
         </div>
       </div>
@@ -30,10 +38,13 @@ export default function History({ member }: { member: Member }) {
       ) : (
         <ul className="list">
           {member.transactions.map((t) => (
-            <li key={t.id} className={`row ${t.type === 'pending' ? 'row--pending' : ''}`}>
-              <span className="row__icon">{ICONS[t.type]}</span>
+            <li key={t.id} className={`row ${t.status === 'pending' ? 'row--pending' : ''}`}>
+              <span className="row__icon">{icon(t)}</span>
               <span className="row__body">
-                <span className="row__title">{t.title}</span>
+                <span className="row__title">
+                  {t.title}
+                  {t.status === 'pending' && ' — ожидает выполнения'}
+                </span>
                 <span className="row__date">{formatDate(t.date)}</span>
               </span>
               <span className={`row__points ${t.points < 0 ? 'row__points--minus' : ''}`}>

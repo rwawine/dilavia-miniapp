@@ -1,7 +1,6 @@
-export type LevelId = 'base' | 'silver' | 'gold';
-
 export interface Level {
-  id: LevelId;
+  /** Код уровня из админки (base, silver, gold…). */
+  code: string;
   name: string;
   /** Сумма выполненных заказов (BYN), с которой открывается уровень. */
   minSpent: number;
@@ -11,19 +10,32 @@ export interface Level {
 }
 
 export interface Reward {
-  id: string;
   points: number;
   /** Скидка в BYN по промокоду. */
   discount: number;
   /** Минимальная сумма заказа для применения промокода (BYN). */
-  minOrder: number;
+  minOrder: number | null;
 }
 
-export type TransactionType = 'earn' | 'pending' | 'spend' | 'bonus' | 'expire';
+/** Правила программы — приходят из админки («Лояльность: настройки»). */
+export interface Program {
+  name: string;
+  isEnabled: boolean;
+  levels: Level[];
+  rewards: Reward[];
+  pointsLifetimeMonths: number;
+  welcomeBonus: number;
+  birthdayBonus: number;
+  promocodeValidDays: number;
+}
+
+export type TransactionType = 'earn' | 'spend' | 'bonus' | 'adjust' | 'expire';
+export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Transaction {
   id: string;
   type: TransactionType;
+  status: TransactionStatus;
   points: number;
   title: string;
   date: string;
@@ -40,17 +52,20 @@ export interface Promo {
 export interface IssuedPromocode {
   code: string;
   discount: number;
-  minOrder: number;
-  validUntil: string;
+  minOrder: number | null;
+  validUntil: string | null;
+  status: 'active' | 'used' | 'expired';
 }
 
 export interface Member {
   firstName: string;
   phone: string;
   balance: number;
-  pending: number;
+  pendingPoints: number;
   /** Сумма выполненных заказов за всё время (BYN). */
   totalSpent: number;
+  level: string;
+  isBlocked: boolean;
   transactions: Transaction[];
   promocodes: IssuedPromocode[];
 }

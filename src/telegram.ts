@@ -32,6 +32,7 @@ export interface TelegramWebApp {
   isVersionAtLeast(version: string): boolean;
   openLink(url: string): void;
   showConfirm(message: string, cb: (ok: boolean) => void): void;
+  requestContact(cb: (shared: boolean, result?: { status?: string; response?: string }) => void): void;
   BackButton: BackButton;
   HapticFeedback: HapticFeedback;
 }
@@ -63,6 +64,26 @@ export function confirmAction(message: string): Promise<boolean> {
 export function openLink(url: string) {
   if (insideTelegram) tg!.openLink(url);
   else window.open(url, '_blank', 'noopener');
+}
+
+export type ContactResult =
+  | { ok: true; signed: string }
+  | { ok: false; reason: 'cancelled' | 'unsupported' };
+
+/**
+ * Просит пользователя поделиться номером. Возвращает строку, подписанную Telegram:
+ * сервер проверяет подпись, поэтому номер нельзя подделать.
+ */
+export function requestPhone(): Promise<ContactResult> {
+  if (!supports('6.9')) return Promise.resolve({ ok: false, reason: 'unsupported' });
+  return new Promise((resolve) => {
+    tg!.requestContact((shared, result) => {
+      if (!shared) return resolve({ ok: false, reason: 'cancelled' });
+      // Старые клиенты Telegram не возвращают подписанный ответ — только отправляют контакт боту.
+      if (!result?.response) return resolve({ ok: false, reason: 'unsupported' });
+      resolve({ ok: true, signed: result.response });
+    });
+  });
 }
 
 /** Кнопка «Назад» в шапке Telegram. Возвращает функцию отписки. */

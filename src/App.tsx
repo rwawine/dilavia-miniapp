@@ -11,12 +11,21 @@ import Levels from './screens/Levels';
 import Promos from './screens/Promos';
 import Onboarding from './screens/Onboarding';
 import Invite from './screens/Invite';
+import Orders from './screens/Orders';
+import Privacy from './screens/Privacy';
 
-export type Screen = 'home' | 'history' | 'redeem' | 'promos' | 'levels' | 'invite';
+export type Screen = 'home' | 'history' | 'order' | 'redeem' | 'promos' | 'levels' | 'invite' | 'privacy';
+
+/** Экраны, которые открываются кнопкой в сообщении бота: ?screen=order. */
+function startScreen(): Screen {
+  const wanted = new URLSearchParams(window.location.search).get('screen');
+  return wanted === 'order' || wanted === 'privacy' ? wanted : 'home';
+}
 
 const TABS: { id: Screen; label: string; icon: string }[] = [
   { id: 'home', label: 'Карта', icon: '💳' },
   { id: 'history', label: 'Баллы', icon: '📋' },
+  { id: 'order', label: 'Мой заказ', icon: '📦' },
   { id: 'redeem', label: 'Обмен', icon: '🎟' },
   { id: 'promos', label: 'Акции', icon: '🔥' },
 ];
@@ -63,7 +72,9 @@ function demoRedeem(member: Member, program: Program, reward: Reward): Member {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>(startScreen);
+  // Политика до вступления: человек ещё не участник, вкладок у него нет.
+  const [privacyOpen, setPrivacyOpen] = useState(() => startScreen() === 'privacy');
   const [state, setState] = useState<State>(
     DEMO ? { kind: 'ready', member: demoMember(), program: DEFAULT_PROGRAM } : { kind: 'loading' },
   );
@@ -83,11 +94,14 @@ export default function App() {
     load();
   }, [load]);
 
-  // «Уровни» и «Пригласить друга» — вложенные экраны: в Telegram показываем кнопку «Назад».
+  // «Уровни», «Пригласить друга» и «Политика» — вложенные экраны: в Telegram показываем кнопку «Назад».
+  const nested = screen === 'levels' || screen === 'invite' || screen === 'privacy';
+  const onboardingPrivacy = state.kind === 'onboarding' && privacyOpen;
   useEffect(() => {
-    if (screen !== 'levels' && screen !== 'invite') return;
+    if (onboardingPrivacy) return showBackButton(() => setPrivacyOpen(false));
+    if (!nested) return;
     return showBackButton(() => setScreen('home'));
-  }, [screen]);
+  }, [nested, onboardingPrivacy]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -146,13 +160,22 @@ export default function App() {
   if (state.kind === 'onboarding') {
     return (
       <main className="app__content app__content--bare">
-        <Onboarding program={state.program} invitedBy={state.invitedBy} onContact={join} />
+        {privacyOpen ? (
+          <Privacy />
+        ) : (
+          <Onboarding
+            program={state.program}
+            invitedBy={state.invitedBy}
+            onContact={join}
+            onPrivacy={() => setPrivacyOpen(true)}
+          />
+        )}
       </main>
     );
   }
 
   const { member, program } = state;
-  const activeTab = screen === 'levels' || screen === 'invite' ? 'home' : screen;
+  const activeTab = nested ? 'home' : screen;
 
   return (
     <div className="app">
@@ -160,10 +183,12 @@ export default function App() {
       <main className="app__content">
         {screen === 'home' && <Home member={member} program={program} onNavigate={navigate} />}
         {screen === 'history' && <History member={member} />}
+        {screen === 'order' && <Orders demo={DEMO} />}
         {screen === 'redeem' && <Redeem member={member} program={program} onRedeem={redeem} />}
         {screen === 'promos' && <Promos promos={DEMO ? MOCK_PROMOS : []} />}
         {screen === 'levels' && <Levels program={program} totalSpent={member.totalSpent} />}
         {screen === 'invite' && <Invite member={member} onSetReferrer={setReferrer} />}
+        {screen === 'privacy' && <Privacy />}
       </main>
 
       <nav className="tabbar">

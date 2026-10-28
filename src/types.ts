@@ -95,3 +95,30 @@ export interface Member {
   promocodes: IssuedPromocode[];
   referral: Referral;
 }
+
+export type StageTone = 'grey' | 'orange' | 'green';
+
+/** Этап изготовления: порядок, цвет и тексты приходят с сервера. */
+export interface Stage {
+  code: string;
+  tone: StageTone;
+  title: string;
+  hint: string;
+  /** Последний этап: ползунок завершён, показываем галочку. */
+  done: boolean;
+}
+
+export interface ProductionOrder {
+  id: string;
+  title: string;
+  orderNumber: string | null;
+  /** Код текущего этапа. */
+  stage: string;
+  note: string | null;
+  /** Планируемая дата готовности (YYYY-MM-DD). */
+  plannedDate: string | null;
+  image: string | null;
+  /** Когда заказ перешёл на каждый этап. */
+  history: { stage: string; at: string }[];
+  updatedAt: string;
+}

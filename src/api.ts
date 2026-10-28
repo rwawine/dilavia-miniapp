@@ -1,4 +1,4 @@
-import type { IssuedPromocode, Member, Program } from './types';
+import type { IssuedPromocode, Member, ProductionOrder, Program, Stage } from './types';
 import { tg } from './telegram';
 
 /** Адрес Strapi. Для локальной разработки: VITE_API_URL=http://localhost:1337/api */
@@ -50,3 +50,6 @@ export const setReferrer = (card: string) => request<MeResponse>('POST', '/loyal
 
 export const redeem = (points: number) =>
   request<{ promocode: IssuedPromocode; member: Member }>('POST', '/loyalty/redeem', { points });
+
+/** Заказы участника с этапами изготовления («Мой заказ»). */
+export const fetchOrders = () => request<{ orders: ProductionOrder[]; stages: Stage[] }>('GET', '/loyalty/orders');

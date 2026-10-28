@@ -1,4 +1,4 @@
-import type { Member, Promo } from '../types';
+import type { Member, ProductionOrder, Promo, Stage } from '../types';
 
 /** Демо-данные: показываются, когда приложение открыто не в Telegram. */
 export const MOCK_MEMBER: Member = {
@@ -48,5 +48,31 @@ export const MOCK_PROMOS: Promo[] = [
     title: '+50 баллов за отзыв',
     description: 'Оставьте отзыв о покупке на сайте с фото — начислим 50 баллов после проверки.',
     badge: '+50',
+  },
+];
+
+export const MOCK_STAGES: Stage[] = [
+  { code: 'request', tone: 'grey', title: 'Оформление заявки', hint: 'Мы приняли вашу заявку и уточняем детали.', done: false },
+  { code: 'design', tone: 'orange', title: 'Проектирование', hint: 'Заказ поступил в работу: проектируем по вашим размерам.', done: false },
+  { code: 'assembly', tone: 'green', title: 'Сборка', hint: 'Мастера собирают вашу мебель.', done: false },
+  { code: 'quality', tone: 'green', title: 'Проверка', hint: 'Проверяем качество перед отгрузкой.', done: false },
+  { code: 'ready', tone: 'grey', title: 'Ожидает отгрузки', hint: 'Заказ готов. Скоро свяжемся для согласования доставки.', done: true },
+];
+
+export const MOCK_ORDERS: ProductionOrder[] = [
+  {
+    id: 'o1',
+    title: 'Угловой диван по размерам клиента',
+    orderNumber: '1087',
+    stage: 'assembly',
+    note: 'Ткань привезли, приступили к сборке.',
+    plannedDate: '2026-11-05',
+    image: null,
+    history: [
+      { stage: 'request', at: '2026-10-21T09:00:00Z' },
+      { stage: 'design', at: '2026-10-23T12:00:00Z' },
+      { stage: 'assembly', at: '2026-10-28T08:30:00Z' },
+    ],
+    updatedAt: '2026-10-28T08:30:00Z',
   },
 ];

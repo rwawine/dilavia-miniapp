@@ -8,9 +8,10 @@ interface Props {
   /** Имя пригласившего, если приложение открыли по ссылке друга. */
   invitedBy?: string | null;
   onContact: (signedContact: string, referrerCard?: string) => Promise<void>;
+  onPrivacy: () => void;
 }
 
-export default function Onboarding({ program, invitedBy, onContact }: Props) {
+export default function Onboarding({ program, invitedBy, onContact, onPrivacy }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [card, setCard] = useState('');
@@ -70,6 +71,14 @@ export default function Onboarding({ program, invitedBy, onContact }: Props) {
 
       <p className="note">
         Мы найдём ваши заказы по номеру телефона. Номер подтверждает сам Telegram — вводить ничего не нужно.
+      </p>
+
+      <p className="note">
+        Нажимая «Вступить» и делясь контактом, вы соглашаетесь на обработку персональных данных и с{' '}
+        <button className="link" onClick={onPrivacy}>
+          политикой конфиденциальности
+        </button>
+        .
       </p>
 
       {!invitedBy && program.referralBonus > 0 && (

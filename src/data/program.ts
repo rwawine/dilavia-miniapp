@@ -43,3 +43,6 @@ export function getNextLevel(program: Program, code: string): Level | undefined 
   const levels = sorted(program);
   return levels[levels.findIndex((l) => l.code === code) + 1];
 }
+
+/** Дата редакции политики конфиденциальности (screens/Privacy.tsx). Меняется вместе с текстом. */
+export const PRIVACY_VERSION_LABEL = '29.10.2026';

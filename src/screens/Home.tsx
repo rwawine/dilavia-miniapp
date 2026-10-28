@@ -90,6 +90,10 @@ export default function Home({ member, program, onNavigate }: Props) {
           Перейти в каталог
         </button>
       </div>
+
+      <button className="link link--center" onClick={() => onNavigate('privacy')}>
+        Политика конфиденциальности
+      </button>
     </div>
   );
 }
